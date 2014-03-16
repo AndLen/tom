@@ -52,6 +52,11 @@ public class CardFrame implements ActionListener, WindowListener {
         statMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
         statMenuItem.addActionListener(this);
 
+        JMenuItem finishMenuItem = new JMenuItem("Finish");
+        jMenu.add(finishMenuItem);
+        finishMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
+        finishMenuItem.addActionListener(this);
+
     }
 
     public static void main(String args[]) throws InvocationTargetException, InterruptedException {
@@ -113,6 +118,14 @@ public class CardFrame implements ActionListener, WindowListener {
             }
         } else if (command.equals("Stats")) {
             showStats();
+        } else if (command.equals("Finish")) {
+            new Thread() {
+                public void run() {
+                    if (game.tryFinish(panel)) {
+                        panel.doWin();
+                    }
+                }
+            }.start();
         }
     }
 
@@ -132,7 +145,7 @@ public class CardFrame implements ActionListener, WindowListener {
                 frame.pack();
             }
         });
-        frame.add(reset,BorderLayout.PAGE_END);
+        frame.add(reset, BorderLayout.PAGE_END);
         frame.add(textPanel);
         frame.pack();
         frame.setVisible(true);

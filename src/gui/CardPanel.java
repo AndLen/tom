@@ -141,9 +141,10 @@ public class CardPanel extends JPanel implements ComponentListener, MouseListene
             if (firstRevealedCard == -1 || (firstRevealedCard == lastRevealed(cards) && cards.get(firstRevealedCard).isHidden())) {
                 if (cards.size() > 0) {
                     int lastUnRevealed = lastUnRevealed(cards);
-                    if(lastUnRevealed != -1){
-                    renderUpsideDownCard(g, x, y, cards.get(lastUnRevealed).isBlueBack());
-                    y += CARD_Y_NO_OVERLAP;}
+                    if (lastUnRevealed != -1) {
+                        renderUpsideDownCard(g, x, y, cards.get(lastUnRevealed).isBlueBack());
+                        y += CARD_Y_NO_OVERLAP;
+                    }
                 }
             } else {
                 for (int j = indexToRenderFrom; j < cards.size(); j++) {
@@ -365,18 +366,23 @@ public class CardPanel extends JPanel implements ComponentListener, MouseListene
             } finally {
                 this.repaint();
             }
-            if (game.hasWon()) {
-                int elapsedTime = (int) (System.currentTimeMillis() - game.getStartTime());
-                StorageManager.win(elapsedTime, game.getNumMoves());
-                String[] options = new String[]{"Play Again", "Quit"};
-                int result = JOptionPane.showOptionDialog(CardFrame.showStats(), "Congratulations! You have won.\n Time: " + (elapsedTime/1000) + " s\nMoves: " + game.getNumMoves(), "Win!", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                if (result == JOptionPane.YES_OPTION) {
-                    game.restart();
-
-                } else {
-                    System.exit(0);
-                }
+            if (game.hasWon(game.getTopRow())) {
+                doWin();
             }
+
+        }
+    }
+
+    public void doWin() {
+        int elapsedTime = (int) (System.currentTimeMillis() - game.getStartTime());
+        StorageManager.win(elapsedTime, game.getNumMoves());
+        String[] options = new String[]{"Play Again", "Quit"};
+        int result = JOptionPane.showOptionDialog(CardFrame.showStats(), "Congratulations! You have won.\n Time: " + (elapsedTime / 1000) + " s\nMoves: " + game.getNumMoves(), "Win!", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        if (result == JOptionPane.YES_OPTION) {
+            game.restart();
+
+        } else {
+            System.exit(0);
         }
     }
 

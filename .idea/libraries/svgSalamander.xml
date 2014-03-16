@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="svgSalamander">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/svgSalamander.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/svgSalamander-tiny.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/libs/svgSalamanderJavadoc.zip!/" />

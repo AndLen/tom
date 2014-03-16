@@ -12,12 +12,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CardGame {
     //Actually uses copy on write arraylists to prevent concurrent modification from threading
     //(swing vs logic)
-    private final List<List<Card>> board;
+    private List<List<Card>> board;
     private final Queue<Card> deck;
-    private final List<List<Card>> topRow;
+    private List<List<Card>> topRow;
     private final CardFrame cardFrame;
     private final Stack<CardMove> history;
     private long startTime;
+    private int additionalHistory = 0;
 
     public CardGame(CardFrame cardFrame) {
         this.cardFrame = cardFrame;
@@ -26,6 +27,31 @@ public class CardGame {
         topRow = new CopyOnWriteArrayList<List<Card>>();
         history = new Stack<CardMove>();
     }
+
+    public void dealTestGame(CardPanel panel) {
+        for (int i = 0; i < 8; i++) {
+            topRow.add(new CopyOnWriteArrayList<Card>());
+            for (int j = 0; j < 8; j++) {
+                topRow.get(i).add((new Card(Card.Suit.values()[i % 4], Card.Rank.values()[j], true, true)));
+            }
+
+        }
+        List<Card> cards = new ArrayList<Card>();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 12; j > 7; j--) {
+                cards.add(new Card(Card.Suit.values()[i % 4], Card.Rank.values()[j], true, true));
+            }
+        }
+        //Make 10 piles
+        for (int i = 0; i < 10; i++) {
+            board.add(new CopyOnWriteArrayList<Card>());
+            for (int j = 0; j < 4; j++) {
+                board.get(i).add(cards.remove(0));
+            }
+        }
+        repaintWhileDealing(panel);
+    }
+
 
     public void dealGame(CardPanel panel) {
         while (!panel.isReady()) {
@@ -49,7 +75,7 @@ public class CardGame {
         }
 
         List<Card> firstPack = new ArrayList<Card>();
-        makePack(firstPack, false,false);
+        makePack(firstPack, false, false);
         Collections.shuffle(firstPack);
 
         //Make 10 piles
@@ -78,7 +104,7 @@ public class CardGame {
             }
         }
         List<Card> secondPack = new ArrayList<Card>();
-        makePack(secondPack, true,true);
+        makePack(secondPack, true, true);
         Collections.shuffle(secondPack);
         board.get(0).add(secondPack.remove(0));
         repaintWhileDealing(panel);
@@ -88,10 +114,12 @@ public class CardGame {
         repaintWhileDealing(panel);
     }
 
-    private static void repaintWhileDealing(CardPanel panel) {
+    private static void repaintWhileDealing(CardPanel panel, int... delays) {
+        int delay = delays.length > 0 ? delays[0] : 50;
         panel.repaint();
         try {
-            Thread.sleep(50);
+
+            Thread.sleep(delay);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -153,7 +181,7 @@ public class CardGame {
         }
         if (firstToMove.getRank().ordinal() == lastInRow.getRank().ordinal() - 1) {
             if (listIndexFrom < from.size() - 1) {
-                if (suitMoveIsValid(firstToMove.getSuit(),lastInRow.getSuit())) {
+                if (suitMoveIsValid(firstToMove.getSuit(), lastInRow.getSuit())) {
                     for (int i = listIndexFrom; i < from.size(); i++) {
                         to.add(from.get(i));
                     }
@@ -271,9 +299,9 @@ public class CardGame {
         return deck;
     }
 
-    public boolean hasWon() {
+    public boolean hasWon(List<List<Card>> topRowCards) {
 
-        for (List<Card> pile : topRow) {
+        for (List<Card> pile : topRowCards) {
             if (pile.size() != 13) {
                 return false;
             }
@@ -305,7 +333,7 @@ public class CardGame {
 
     public int getNumMoves() {
         //Handy
-        return history.size();
+        return history.size() + additionalHistory;
     }
 
     public String dealDeck(final CardPanel panel) {
@@ -328,5 +356,52 @@ public class CardGame {
     public String reveal(int boardIndexFrom, int toMoveTop) {
         board.get(boardIndexFrom).get(toMoveTop).setRevealed(true);
         return "";
+    }
+
+    public boolean tryFinish(CardPanel panel) {
+        class FinishException extends Exception {
+        }
+
+        List<List<Card>> localTopRow = new ArrayList<List<Card>>(topRow);
+        List<List<Card>> localBoard = new ArrayList<List<Card>>(board);
+        //Lets clear up the pesky bits first - we can't do this if anything is not revealed
+        try {
+            for (List<Card> cards : board) {
+                for (Card card : cards) {
+                    if (!card.isRevealed()) {
+                        throw new FinishException();
+                    }
+                }
+
+            }
+            //Cool, now everything is revealed. This simplifies the logic.
+            while (!hasWon(topRow)) {
+                boolean changedThisLoop = false;
+                for (int i = 0; i < topRow.size(); i++) {
+                    for (int j = 0; j < board.size(); j++) {
+                        List<Card> cards = board.get(j);
+                        if (cards.size() != 0) {
+                            String s = moveCardOntoTopRowFromBoard(cards.size() - 1, j, i);
+                            if (s.isEmpty()) {
+                                repaintWhileDealing(panel, 2000);
+                                changedThisLoop = true;
+                                additionalHistory++;
+                            }
+                        }
+
+                    }
+                }
+                //We haven't won and yet haven't changed anything - must've been unable to do it
+                if (!changedThisLoop) {
+                    throw new FinishException();
+                }
+            }
+            //yay
+            return true;
+        } catch (FinishException finishException) {
+            topRow = localTopRow;
+            board = localBoard;
+            return false;
+        }
     }
 }
