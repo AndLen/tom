@@ -383,7 +383,7 @@ public class CardGame {
                         if (cards.size() != 0) {
                             String s = moveCardOntoTopRowFromBoard(cards.size() - 1, j, i);
                             if (s.isEmpty()) {
-                                repaintWhileDealing(panel, 2000);
+                                repaintWhileDealing(panel, 200);
                                 changedThisLoop = true;
                                 additionalHistory++;
                             }
