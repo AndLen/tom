@@ -1,11 +1,9 @@
 <component name="ArtifactManager">
-  <artifact name="tom:jar">
+  <artifact type="jar" name="tom:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/tom_jar</output-path>
-    <root id="root">
-      <element id="archive" name="tom.jar">
-        <element id="module-output" name="tom" />
-      </element>
-      <element id="library" level="project" name="svgSalamander" />
+    <root id="archive" name="tom.jar">
+      <element id="module-output" name="tom" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/svgSalamander-tiny.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
